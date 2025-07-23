@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #fce4ec, #f8bbd0);
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fff;
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      z-index: 2;
+      position: relative;
+    }
+
+    .hamburger {
+      font-size: 24px;
+      cursor: pointer;
+      color: #ec407a;
+    }
+
+    .admin-info {
+      background-color: #fce4ec;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -250px;
+      width: 250px;
+      height: 100%;
+      background-color: #f8bbd0;
+      padding: 1rem;
+      transition: left 0.3s ease;
+      z-index: 1000;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 10px;
+      color: #880e4f;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 10px 0;
+      border-radius: 5px;
+      background-color: #fff3f8;
+    }
+
+    .sidebar a:hover {
+      background-color: #f48fb1;
+      color: white;
+    }
+
+    .hide-sidebar {
+      position: absolute;
+      top: 50%;
+      right: -25px;
+      background-color: #ec407a;
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      line-height: 30px;
+      font-size: 20px;
+      cursor: pointer;
+      transform: translateY(-50%);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      display: none;
+    }
+
+    .sidebar.open .hide-sidebar {
+      display: block;
+    }
+
+    .main {
+      margin: 20px;
+      padding-left: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .welcome-box {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .welcome-box h2 {
+      margin-bottom: 10px;
+      color: #c2185b;
+    }
+
+    .welcome-box p {
+      color: #6a1b9a;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      font-size: 28px;
+      color: #d81b60;
+    }
+
+    .card p {
+      margin-top: 5px;
+      font-weight: bold;
+      color: #6a1b9a;
+    }
+
+    .icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .logout-btn {
+      margin-top: 40px;
+      background-color: #f06292;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .main {
+        margin-left: 0;
+        padding: 1rem;
+      }
+    }
+
+    /* 🌸 Falling Petals Animation */
+.petal {
+  position: fixed;
+  top: -50px;
+  width: 25px;
+  height: 25px;
+  background-image: url('https://cdn-icons-png.flaticon.com/512/742/742751.png');
+  background-size: cover;
+  animation: fall linear infinite;
+  z-index: 0;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🌸 Generate Petals Dynamically -->
+  <script>
+    for (let i = 0; i < 20; i++) {
+      const petal = document.createElement('div');
+      petal.className = 'petal';
+      petal.style.left = Math.random() * 100 + 'vw';
+      petal.style.animationDuration = (5 + Math.random() * 5) + 's';
+      petal.style.animationDelay = (Math.random() * 5) + 's';
+      document.body.appendChild(petal);
+    }
+  </script>
+
+  <header>
+    <div class="hamburger" id="hamburger">☰ Dashboard</div>
+    <div class="admin-info">👤 Admin<br>ID: <span id="adminId">Loading...</span></div>
+  </header>
+
+  <div class="sidebar" id="sidebar">
+    <div class="hide-sidebar" id="hideSidebar" title="Hide Sidebar">»</div>
+    <a href="#" id="manageUsers">👥 Manage Users</a>
+    <a href="#" id="manageProducts">📦 Manage Products</a>
+    <a href="#" id="manageSuppliers">🏭 Manage Suppliers</a>
+    <a href="#" id="manageOrders">🧾 Manage Orders</a>
+    <a href="#" id="manageReviews">⭐ Manage Reviews</a>
+    <a href="#" id="salesChart">📊 Sales Chart</a>
+    <a href="#" id="logout">🚪 Logout</a>
+  </div>
+
+  <div class="main">
+    <div class="welcome-box">
+      <h2>Welcome to Your Dashboard</h2>
+      <p>Managing your business has never been more beautiful</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="card">
+        <div class="icon">👥</div>
+        <h3 id="statUsers">0</h3>
+        <p>Customers</p>
+      </div>
+      <div class="card">
+        <div class="icon">📦</div>
+        <h3 id="statProducts">0</h3>
+        <p>Products</p>
+      </div>
+      <div class="card">
+        <div class="icon">🧾</div>
+        <h3 id="statOrders">0</h3>
+        <p>Orders</p>
+      </div>
+      <div class="card">
+        <div class="icon">⭐</div>
+        <h3 id="statReviews">0</h3>
+        <p>Reviews</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = sessionStorage.getItem('token');
+    const userId = sessionStorage.getItem('userId');
+    const role = sessionStorage.getItem('role');
+
+    if (!token || !userId || role !== 'admin') {
+      sessionStorage.clear();
+      window.location.href = "/frontend/Userhandling/login.html";
+    }
+
+    $(document).ready(function () {
+      $("#adminId").text(userId);
+
+      $("#hamburger").click(() => {
+        $("#sidebar").addClass("open");
+      });
+
+      $("#hideSidebar").click(() => {
+        $("#sidebar").removeClass("open");
+      });
+
+      $("#logout, #logoutBtn").click(() => {
+        sessionStorage.clear();
+        window.location.href = "/frontend/Userhandling/login.html";
+      });
+
+      $("#manageUsers").click(() => window.location.href = "/frontend/Adminhandling/manageuser.html");
+      $("#manageProducts").click(() => window.location.href = "/frontend/Adminhandling/product.html");
+      $("#manageSuppliers").click(() => window.location.href = "/frontend/Adminhandling/supplier.html");
+      $("#manageOrders").click(() => window.location.href = "/frontend/Adminhandling/order.html");
+      $("#manageReviews").click(() => window.location.href = "/frontend/Adminhandling/managereview.html");
+      $("#salesChart").click(() => window.location.href = "/frontend/Adminhandling/chart.html");
+
+      $.ajax({
+        method: "GET",
+        url: "http://localhost:4000/api/v1/admindashboard",
+        headers: { 'Authorization': `Bearer ${token}` },
+        success: function (res) {
+          const stats = res.stats;
+          $("#statUsers").text(stats.customers);
+          $("#statProducts").text(stats.products);
+          $("#statOrders").text(stats.orders);
+          $("#statReviews").text(stats.reviews);
+        },
+        error: function () {
+          Swal.fire("Error", "Failed to load dashboard stats", "error");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

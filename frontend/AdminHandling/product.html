@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Product Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.21/css/dataTables.bootstrap4.min.css" integrity="sha512-PT0RvABaDhDQugEbpNMwgYBCnGCiTZMh9yOzUsJHDgl/dMhD9yjHAwoumnUk3JydV3QTcIkNDuN40CJxik5+WQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://cdn.datatables.net/buttons/2.3.5/css/buttons.dataTables.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables.net-buttons-bs5/2.3.6/buttons.bootstrap5.min.css" integrity="sha512-vWTrt2A9iAn2pK8hNZS26YZRDDUvLrLOOMm+pcrUJFzGssUwoS6Gofp+TT2deQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous" />
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  
+  <!-- DataTables JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.21/js/jquery.dataTables.min.js" integrity="sha512-BkpSL20WETFylMrcirBahHfSnY++H2O1W+UnEEO4yNIl+jI2+zowyoGJpbtk6bx97fBXf++WJHSSK2MV4ghPcg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.5/js/dataTables.buttons.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.5/js/buttons.bootstrap4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.3.5/js/buttons.html5.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #fce4ec, #f8bbd0);
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      text-align: center;
+      color: #ad1457;
+    }
+
+    #backBtn {
+      background-color: #ec407a;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-bottom: 20px;
+    }
+
+    #backBtn:hover {
+      background-color: #d81b60;
+    }
+
+    /* New styling for show/hide form buttons */
+    .form-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    #showFormBtn, #hideFormBtn {
+      background-color: #ec407a;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-size: 14px;
+    }
+
+    #showFormBtn:hover, #hideFormBtn:hover {
+      background-color: #d81b60;
+    }
+
+    #hideFormBtn {
+      background-color: #f44336;
+    }
+
+    #hideFormBtn:hover {
+      background-color: #d32f2f;
+    }
+
+    /* Form container styling */
+    #formContainer {
+      display: none; /* Hidden by default */
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #productForm {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      max-width: 700px;
+      margin: 0 auto 30px;
+      display: grid;
+      gap: 15px;
+      position: relative;
+    }
+
+    #productForm input,
+    #productForm select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    #submitBtn {
+      background-color: #ec407a;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #submitBtn:hover {
+      background-color: #d81b60;
+    }
+
+    /* Close button in form */
+    .close-form-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #ec407a;
+      cursor: pointer;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+
+    .close-form-btn:hover {
+      color: #d81b60;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #f8bbd0;
+      color: #6a1b9a;
+    }
+
+    td button {
+      background-color: #f48fb1;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 0 3px;
+    }
+
+    td button:hover {
+      background-color: #ec407a;
+    }
+
+    .slider-img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .slider-btn {
+      background-color: #ec407a;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .slider-btn:hover {
+      background-color: #d81b60;
+    }
+
+    .image-slider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .petal {
+      position: fixed;
+      top: -50px;
+      width: 25px;
+      height: 25px;
+      background-image: url('https://emojigraph.org/media/apple/rose_1f339.png');
+      background-size: cover;
+      animation: fall linear infinite;
+      z-index: 0;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* DataTables custom styling to match your theme */
+    .dataTables_wrapper .dataTables_filter input {
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+
+    .dataTables_wrapper .dataTables_length select {
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+      border-radius: 10px !important;
+      margin: 0 2px;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+      background-color: #ec407a !important;
+      border-color: #ec407a !important;
+      color: white !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+      background-color: #f48fb1 !important;
+      border-color: #f48fb1 !important;
+      color: white !important;
+    }
+
+    .dt-buttons {
+      margin-bottom: 15px;
+    }
+
+    .dt-buttons .btn {
+      background-color: #ec407a;
+      border-color: #ec407a;
+      color: white;
+      border-radius: 10px;
+      margin-right: 5px;
+    }
+
+    .dt-buttons .btn:hover {
+      background-color: #d81b60;
+      border-color: #d81b60;
+    }
+  </style>
+</head>
+<body>
+
+  <script>
+    for (let i = 0; i < 20; i++) {
+      const petal = document.createElement('div');
+      petal.className = 'petal';
+      petal.style.left = Math.random() * 100 + 'vw';
+      petal.style.animationDuration = (5 + Math.random() * 5) + 's';
+      petal.style.animationDelay = (Math.random() * 5) + 's';
+      document.body.appendChild(petal);
+    }
+  </script>
+
+  <button id="backBtn">« Back to Dashboard</button>
+  <h2>Product Management</h2>
+
+  <!-- Form control buttons -->
+  <div class="form-controls">
+    <button id="showFormBtn">➕ Add New Product</button>
+  </div>
+
+  <!-- Form container (hidden by default) -->
+  <div id="formContainer">
+    <form id="productForm" enctype="multipart/form-data">
+      <button type="button" class="close-form-btn" id="closeFormBtn">×</button>
+      <input type="hidden" id="productId">
+      <input type="text" id="name" name="name" placeholder="Product Name" required>
+
+      <select id="category" name="category" required>
+        <option value="">-- Select Category --</option>
+        <option value="Solo">Solo</option>
+        <option value="By Three">By Three</option>
+        <option value="Bouquet">Bouquet</option>
+      </select>
+
+      <select id="usage_type" name="usage_type" required>
+        <option value="">-- Usage Type --</option>
+        <option value="cut">Cut</option>
+        <option value="potted">Potted</option>
+        <option value="wedding">Wedding</option>
+        <option value="funeral">Funeral</option>
+        <option value="decorative">Decorative</option>
+      </select>
+
+      <input type="text" id="description" name="description" placeholder="Description">
+      <input type="number" step="1" id="price" name="price" placeholder="Price" required>
+      <input type="text" id="color" name="color" placeholder="Color">
+      <input type="number" id="stock" name="stock" placeholder="Stock">
+      <input type="file" id="images" name="images" accept="image/*" multiple>
+
+      <select id="supplier_id" name="supplier_id">
+        <option value="">-- Supplier (Optional) --</option>
+      </select>
+
+      <button type="submit" id="submitBtn">Add Product</button>
+    </form>
+  </div>
+
+  <br>
+
+  <div class="table-responsive">
+    <table id="productTable" class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Usage</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Image</th>
+          <th>Supplier</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      const token = sessionStorage.getItem('token');
+      const userId = sessionStorage.getItem('userId');
+      const role = sessionStorage.getItem('role');
+
+      if (!token || !userId || role !== 'admin') {
+        sessionStorage.clear();
+        return window.location.href = "/frontend/Userhandling/login.html";
+      }
+
+      $("#backBtn").click(() => {
+        window.location.href = "/frontend/Adminhandling/admindashboard.html";
+      });
+
+      // Form show/hide functionality
+      $("#showFormBtn").click(function() {
+        $("#formContainer").show();
+        $("#showFormBtn").hide();
+        // Reset form when showing
+        $("#productForm")[0].reset();
+        $("#productId").val('');
+        $("#submitBtn").text('Add Product');
+      });
+
+      $("#closeFormBtn").click(function() {
+        $("#formContainer").hide();
+        $("#showFormBtn").show();
+      });
+
+      // FIXED: Click outside to hide form - now includes .editBtn in exception list
+      $(document).click(function(event) {
+        if (!$(event.target).closest('#formContainer, #showFormBtn, .editBtn').length) {
+          if ($("#formContainer").is(':visible')) {
+            $("#formContainer").hide();
+            $("#showFormBtn").show();
+          }
+        }
+      });
+
+      // Initialize DataTables
+      $('#productTable').DataTable({
+        "responsive": true,
+        "processing": true,
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "order": [[0, "desc"]],
+        "columnDefs": [
+          {
+            "targets": [6, 8], // Image and Actions columns
+            "orderable": false,
+            "searchable": false
+          }
+        ],
+        "language": {
+          "search": "Search products:",
+          "lengthMenu": "Show _MENU_ products per page",
+          "info": "Showing _START_ to _END_ of _TOTAL_ products",
+          "infoEmpty": "No products found",
+          "infoFiltered": "(filtered from _MAX_ total products)",
+          "paginate": {
+            "first": "First",
+            "last": "Last",
+            "next": "Next",
+            "previous": "Previous"
+          }
+        },
+        "dom": 'Bfrtip',
+        "buttons": [
+          'copy', 'csv', 'excel', 'pdf', 'print'
+        ]
+      });
+    });
+  </script>
+
+  <script src="/frontend/js/product.js" defer></script>
+</body>
+</html>

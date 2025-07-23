@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="/frontend/js/cart.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #fce4ec, #f8bbd0);
+      margin: 0;
+      padding: 30px 15px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    #backToHomeBtn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #ec407a;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+    }
+
+    #backToHomeBtn:hover {
+      background-color: #c2185b;
+    }
+
+    h2 {
+      text-align: center;
+      color: #ad1457;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 90%;
+      max-width: 1000px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #f8bbd0;
+      color: #880e4f;
+    }
+
+    .image-slider {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      margin: auto;
+    }
+
+    .image-slider img.cart-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .img-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: transparent;
+      border: none;
+      color: black;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 0;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      z-index: 2;
+      opacity: 0.9;
+    }
+
+    .img-nav-btn.left { left: -15px; }
+    .img-nav-btn.right { right: -15px; }
+
+    button {
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      background-color: #ec407a;
+      color: white;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background-color: #c2185b;
+    }
+
+    .cart-total {
+      text-align: right;
+      margin: 20px auto;
+      max-width: 90%;
+      font-size: 1.2em;
+      color: #6a1b9a;
+      font-weight: bold;
+    }
+
+    .bottom-buttons {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .bottom-buttons button {
+      padding: 10px 25px;
+      font-size: 16px;
+      margin: 10px;
+    }
+
+    .petal {
+      position: fixed;
+      top: -50px;
+      width: 25px;
+      height: 25px;
+      background-image: url('https://cdn-icons-png.flaticon.com/512/742/742751.png');
+      background-size: cover;
+      animation: fall linear infinite;
+      z-index: 0;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🌸 Falling Petals -->
+  <script>
+    for (let i = 0; i < 15; i++) {
+      const petal = document.createElement('div');
+      petal.className = 'petal';
+      petal.style.left = Math.random() * 100 + 'vw';
+      petal.style.animationDuration = (5 + Math.random() * 5) + 's';
+      petal.style.animationDelay = (Math.random() * 5) + 's';
+      document.body.appendChild(petal);
+    }
+  </script>
+
+  <button id="backToHomeBtn">« Back to Home</button>
+
+  <h2>🛒 My Cart</h2>
+
+  <table id="cartTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Product Name</th>
+        <th>Image</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- cart items will be loaded here -->
+    </tbody>
+  </table>
+
+  <div class="cart-total">
+    Total: <span id="cartTotal">$0.00</span>
+  </div>
+
+  <div class="bottom-buttons">
+    <button id="checkoutBtn">Proceed to Checkout</button>
+  </div>
+
+</body>
+</html>

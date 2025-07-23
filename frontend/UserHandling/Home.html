@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Customer Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="/frontend/js/home.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Floating particles background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="%23fff" opacity="0.3"/><circle cx="80" cy="30" r="1.5" fill="%23fff" opacity="0.2"/><circle cx="40" cy="70" r="1" fill="%23fff" opacity="0.4"/><circle cx="90" cy="80" r="2.5" fill="%23fff" opacity="0.1"/><circle cx="10" cy="50" r="1.8" fill="%23fff" opacity="0.3"/></svg>') repeat;
+      animation: float 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-100px); }
+    }
+
+    /* Top Navigation Bar */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, rgba(136, 14, 79, 0.95) 0%, rgba(194, 24, 91, 0.95) 50%, rgba(233, 30, 99, 0.95) 100%);
+      backdrop-filter: blur(15px);
+      padding: 8px 20px;
+      z-index: 1002;
+      box-shadow: 0 4px 25px rgba(136, 14, 79, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .top-nav-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .user-avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #fff, #f8bbd0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #880e4f;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* User Dropdown Styles */
+    .user-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-toggle {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dropdown-toggle:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      min-width: 180px;
+      z-index: 1003;
+      margin-top: 8px;
+    }
+
+    .dropdown-menu a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      color: #880e4f;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(136, 14, 79, 0.1);
+    }
+
+    .dropdown-menu a:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-menu a:hover {
+      background: rgba(136, 14, 79, 0.1);
+      color: #880e4f;
+      transform: translateX(5px);
+    }
+
+    .dropdown-menu a:last-child:hover {
+      background: rgba(244, 67, 54, 0.1);
+      color: #f44336;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-btn.logout {
+      background: rgba(244, 67, 54, 0.2);
+      border-color: rgba(244, 67, 54, 0.3);
+    }
+
+    .nav-btn.logout:hover {
+      background: rgba(244, 67, 54, 0.3);
+    }
+
+    .cart-count {
+      background: #ff4444;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: -4px;
+      box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+    }
+
+    /* Main container */
+    .main-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+      padding-top: 50px; /* Space for top nav */
+    }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 50px; /* Below top nav */
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 20px rgba(136, 14, 79, 0.1);
+      border-bottom: 1px solid rgba(136, 14, 79, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin: 0;
+      color: #880e4f;
+      font-size: 28px;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      background: linear-gradient(45deg, #880e4f, #c2185b, #e91e63);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Sidebar Filters */
+    .sidebar {
+      width: 300px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 120px 25px 25px 25px; /* Adjusted padding since no hamburger */
+      box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+      border-right: 1px solid rgba(136, 14, 79, 0.1);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar h3 {
+      color: #880e4f;
+      font-size: 20px;
+      margin-bottom: 25px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f8bbd0;
+      font-weight: 600;
+      position: relative;
+    }
+
+    .sidebar h3::after {
+      content: '🌺';
+      position: absolute;
+      right: 0;
+      top: -5px;
+      font-size: 24px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    #filters {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+
+    .filter-group label {
+      color: #880e4f;
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-group label::before {
+      content: '🌸';
+      font-size: 12px;
+    }
+
+    #filters input, #filters select {
+      padding: 12px 15px;
+      border-radius: 12px;
+      border: 2px solid #f8bbd0;
+      font-family: 'Poppins', sans-serif;
+      background: rgba(255, 255, 255, 0.9);
+      color: #880e4f;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      position: relative;
+    }
+
+    #filters input:focus, #filters select:focus {
+      outline: none;
+      border-color: #ec407a;
+      box-shadow: 0 0 0 3px rgba(236, 64, 122, 0.1);
+      transform: translateY(-2px);
+    }
+
+    #filters input:hover, #filters select:hover {
+      border-color: #ec407a;
+      box-shadow: 0 2px 10px rgba(236, 64, 122, 0.1);
+    }
+
+    .filter-group::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #f8bbd0, transparent);
+    }
+
+    /* Filter separator line */
+    .filter-separator {
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #f8bbd0, transparent);
+      margin: 15px 0;
+      border: none;
+    }
+
+    .section-title {
+      color: #880e4f;
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::before {
+      content: '🎨';
+      font-size: 14px;
+    }
+
+    #applyFiltersBtn {
+      background: linear-gradient(45deg, #ec407a, #c2185b);
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 15px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(236, 64, 122, 0.3);
+      margin-top: 10px;
+      display: none; /* Hidden since filters will be automatic */
+    }
+
+    #applyFiltersBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(236, 64, 122, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 120px 30px 30px 30px; /* Adjusted padding since no hamburger */
+      background: transparent;
+    }
+
+    /* 🌸 Product Cards */
+    #productContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .product-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 20px;
+      text-align: center;
+      transition: all 0.4s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ec407a, #c2185b, #e91e63);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .product-card:hover::before {
+      opacity: 1;
+    }
+
+    .product-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 15px 40px rgba(236, 64, 122, 0.2);
+    }
+
+    .product-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      transition: transform 0.3s ease;
+    }
+
+    .product-card:hover img {
+      transform: scale(1.05);
+    }
+
+    .product-card h4 {
+      font-size: 18px;
+      color: #880e4f;
+      margin: 10px 0;
+      font-weight: 600;
+    }
+
+    .product-card p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #6a1b9a;
+      line-height: 1.4;
+    }
+
+    .product-card button {
+      margin-top: 12px;
+      margin-right: 8px;
+      padding: 10px 16px;
+      background: linear-gradient(45deg, #ec407a, #c2185b);
+      border: none;
+      border-radius: 25px;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(236, 64, 122, 0.3);
+    }
+
+    .product-card button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(236, 64, 122, 0.4);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .top-nav-content {
+        flex-direction: column;
+        gap: 10px;
+        padding: 5px 0;
+      }
+
+      .user-info {
+        font-size: 12px;
+      }
+
+      .nav-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .dropdown-toggle {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .dropdown-menu {
+        min-width: 150px;
+      }
+
+      .main-container {
+        flex-direction: column;
+        padding-top: 100px; /* Adjusted for mobile */
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        padding: 20px;
+        order: 2;
+      }
+
+      .main-content {
+        padding: 20px 15px 15px 15px;
+        order: 1;
+      }
+
+      #productContainer {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+      }
+
+      .header {
+        top: 80px; /* Adjusted for mobile */
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(248, 187, 208, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(45deg, #ec407a, #c2185b);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(45deg, #c2185b, #880e4f);
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <div class="top-nav">
+    <div class="top-nav-content">
+      <div class="user-info">
+        <div class="user-avatar">👤</div>
+        <span id="welcomeText">Welcome, Customer!</span>
+      </div>
+      <div class="nav-actions">
+        <!-- Cart Button (first) -->
+        <button class="nav-btn" id="viewCartBtn">
+          🛒 My Cart
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        
+        <!-- User Dropdown (second) -->
+        <div class="user-dropdown">
+          <button class="dropdown-toggle" id="userDropdownToggle">
+            <span class="user-avatar"></span>
+            ⚙️ Account
+          </button>
+          <div class="dropdown-menu" id="userDropdownMenu" style="display: none;">
+            <a href="#" id="editProfileBtn">✏️ Edit Profile</a>
+            <a href="#" id="orderHistoryBtn">📋 Order History</a>
+            <a href="#" id="logoutBtn">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h2>🌸 Welcome to Petal Paradise</h2>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Sidebar Filters -->
+    <div class="sidebar">
+      <h3>Filter Products</h3>
+      <div id="filters">
+        <div class="filter-group">
+          <label for="searchInput">Search Products</label>
+          <input type="text" id="searchInput" placeholder="Search by name">
+        </div>
+
+        <div class="filter-group">
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter">
+            <option value="">All Categories</option>
+            <option value="Solo">Solo</option>
+            <option value="By Three">By Three</option>
+            <option value="Bouquet">Bouquet</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="usageTypeFilter">Usage Type</label>
+          <select id="usageTypeFilter">
+            <option value="">All Usage</option>
+            <option value="Cut">Cut</option>
+            <option value="Potted">Potted</option>
+            <option value="Wedding">Wedding</option>
+            <option value="Funeral">Funeral</option>
+            <option value="Decorative">Decorative</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="colorFilter">Colors</label>
+          <select id="colorFilter">
+            <option value="">All Colors</option>
+            <option value="Red">Red</option>
+            <option value="Pink">Pink</option>
+            <option value="White">White</option>
+            <option value="Yellow">Yellow</option>
+            <option value="Purple">Purple</option>
+            <option value="Blue">Blue</option>
+            <option value="Orange">Orange</option>
+            <option value="Mixed">Mixed</option>
+          </select>
+        </div>
+
+        <!-- Filter separator line -->
+        <hr class="filter-separator">
+
+        <div class="section-title">Sorting</div>
+
+        <div class="filter-group">
+          <label for="priceSort">Price Sorting</label>
+          <select id="priceSort">
+            <option value="">Sort by price</option>
+            <option value="asc">Price: Low to High</option>
+            <option value="desc">Price: High to Low</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="stockSort">Stock Sorting</label>
+          <select id="stockSort">
+            <option value="">Sort by stock</option>
+            <option value="high">High to Low</option>
+            <option value="low">Low to High</option>
+          </select>
+        </div>
+
+        <button id="applyFiltersBtn">Apply Filters</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- 🌸 Product Container -->
+      <div id="productContainer"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Auto-apply filters when any filter changes
+    $("#filters input, #filters select").on("input change", function() {
+      // This will automatically trigger filtering when the JS is connected
+      if (typeof applyFilters === 'function') {
+        applyFilters();
+      }
+    });
+
+    // Function to update customer name (to be called from home.js)
+    function updateCustomerName(customerName) {
+      if (customerName) {
+        $("#welcomeText").text(`Welcome, ${customerName}!`);
+      }
+    }
+
+    // Function to update cart count (to be called from home.js)
+    function updateCartCount(count) {
+      $("#cartCount").text(count || 0);
+    }
+  </script>
+
+</body>
+</html>

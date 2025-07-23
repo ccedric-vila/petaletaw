@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Update Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #fce4ec, #f8bbd0);
+      padding: 20px;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    #backBtn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #ec407a;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      z-index: 2;
+    }
+
+    #backBtn:hover {
+      background-color: #c2185b;
+    }
+
+    h2 {
+      text-align: center;
+      color: #ad1457;
+      margin-top: 60px;
+      margin-bottom: 30px;
+      font-size: 2.2em;
+      font-weight: 700;
+    }
+
+    .profile-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      overflow: hidden;
+      display: flex;
+      min-height: 500px;
+    }
+
+    .image-section {
+      flex: 1;
+      background: linear-gradient(135deg, #f48fb1, #ec407a);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .image-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="80" r="2.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+      pointer-events: none;
+    }
+
+    .avatar-container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .avatar-upload-area {
+      width: 180px;
+      height: 180px;
+      border: 3px dashed rgba(255,255,255,0.8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar-upload-area:hover {
+      border-color: white;
+      transform: scale(1.05);
+    }
+
+    .avatar-upload-area.has-image {
+      border-style: solid;
+      border-color: white;
+    }
+
+    #avatarPreview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+    }
+
+    .upload-placeholder {
+      color: white;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .upload-placeholder i {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .change-photo-btn {
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      padding: 10px 20px;
+      border: 2px solid white;
+      border-radius: 25px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    .change-photo-btn:hover {
+      background-color: white;
+      color: #ec407a;
+    }
+
+    .form-section {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-title {
+      color: #ad1457;
+      font-size: 1.5em;
+      font-weight: 700;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #ad1457;
+      font-weight: 500;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: 2px solid #f5f5f5;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #ec407a;
+      box-shadow: 0 0 0 3px rgba(236, 64, 122, 0.1);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #ec407a, #d81b60);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      margin-top: 20px;
+      box-shadow: 0 4px 15px rgba(236, 64, 122, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(236, 64, 122, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* 🌸 Petal Animation */
+    .petal {
+      position: fixed;
+      top: -50px;
+      width: 25px;
+      height: 25px;
+      background-image: url('https://cdn-icons-png.flaticon.com/512/742/742751.png');
+      background-size: cover;
+      animation: fall linear infinite;
+      z-index: 0;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .profile-container {
+        flex-direction: column;
+        max-width: 500px;
+      }
+      
+      .image-section {
+        padding: 30px;
+      }
+      
+      .avatar-upload-area {
+        width: 150px;
+        height: 150px;
+      }
+      
+      .form-section {
+        padding: 30px;
+      }
+      
+      h2 {
+        font-size: 1.8em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🌸 Petals Falling -->
+  <script>
+    for (let i = 0; i < 15; i++) {
+      const petal = document.createElement('div');
+      petal.className = 'petal';
+      petal.style.left = Math.random() * 100 + 'vw';
+      petal.style.animationDuration = (5 + Math.random() * 5) + 's';
+      petal.style.animationDelay = (Math.random() * 5) + 's';
+      document.body.appendChild(petal);
+    }
+  </script>
+
+  <!-- 🔙 Back Button -->
+  <a id="backBtn" href="/frontend/Userhandling/home.html">« Back to Home</a>
+
+  <h2>Update Profile</h2>
+
+  <div class="profile-container">
+    <!-- Image Section -->
+    <div class="image-section">
+      <div class="avatar-container">
+        <div class="avatar-upload-area" onclick="document.getElementById('avatar').click()">
+          <img id="avatarPreview" src="#" alt="Preview" />
+          <div class="upload-placeholder">
+            <i>📷</i>
+            <div>Click to upload<br>profile photo</div>
+          </div>
+        </div>
+        <div class="change-photo-btn" onclick="document.getElementById('avatar').click()">
+          Change Photo
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="form-section">
+      <div class="form-title">Personal Information</div>
+      <form id="profileForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" name="name" id="fullName" placeholder="Enter your full name" required />
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">Contact Number</label>
+          <input type="text" name="contact_number" id="phone" placeholder="Enter your phone number" />
+        </div>
+        
+        <div class="form-group">
+          <label for="address">Address</label>
+          <input type="text" name="address" id="address" placeholder="Enter your address" />
+        </div>
+        
+        <input type="file" name="profile_image" id="avatar" accept="image/*" />
+
+        <button type="submit" id="updateBtn">Update Profile</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    $("#avatar").on("change", function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          $("#avatarPreview").attr("src", e.target.result).show();
+          $(".upload-placeholder").hide();
+          $(".avatar-upload-area").addClass("has-image");
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+
+  <script src="/frontend/js/user.js"></script>
+</body>
+</html>
