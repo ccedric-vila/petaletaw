@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const ReviewController = require('../controllers/ReviewController');
-const auth = require('../middlewares/auth'); // adjust path if your structure differs
+const reviewController = require('../controllers/ReviewController');
+const auth = require('../middlewares/auth');
 
-// ⭐ Get my review for a product
-router.get('/review/:productId', auth, ReviewController.getMyReview);
+// Order routes
+router.get('/orders/history', auth, reviewController.getOrderHistory);
+router.get('/orders/:orderId', auth, reviewController.getOrderDetails);
 
-// ⭐ Add or update review
-router.post('/review', auth, ReviewController.addOrUpdateReview);
-
-// ❌ Delete review
-router.delete('/review/:productId', auth, ReviewController.deleteReview);
+// Review routes
+router.get('/reviews/item/:orderItemId', auth, reviewController.getReviewByOrderItem); // ADD THIS MISSING ROUTE
+router.post('/reviews', auth, reviewController.addOrUpdateReview);
+router.delete('/reviews/:order_item_id', auth, reviewController.deleteReview);
 
 module.exports = router;

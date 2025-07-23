@@ -172,6 +172,8 @@ $(document).ready(function () {
                         `<button class="addToCartBtn" data-id="${product.id}">Add to Cart</button>
                          <button class="checkoutBtn" data-id="${product.id}">Checkout</button>`
                     }
+                    <button class="checkReviewsBtn" data-id="${product.id}">Check Reviews</button>
+                    <div class="reviews-container" id="reviews-${product.id}" style="display: none;"></div>
                 </div>`;
         });
 
@@ -190,6 +192,7 @@ $(document).ready(function () {
         // Reattach event listeners for new products
         $('.addToCartBtn').off('click').on('click', addToCart);
         $('.checkoutBtn').off('click').on('click', checkoutSolo);
+        $('.checkReviewsBtn').off('click').on('click', checkReviews);
     }
 
     function showLoadingIndicator() {
@@ -293,6 +296,111 @@ $(document).ready(function () {
                 button.prop('disabled', false).text('Checkout');
             }
         });
+    }
+
+    // NEW FUNCTION: Check Reviews
+    function checkReviews() {
+        const productId = $(this).data('id');
+        const button = $(this);
+        const reviewsContainer = $(`#reviews-${productId}`);
+        
+        // Toggle reviews visibility
+        if (reviewsContainer.is(':visible')) {
+            reviewsContainer.slideUp();
+            button.text('Check Reviews');
+            return;
+        }
+        
+        // Show loading state
+        button.prop('disabled', true).text('Loading Reviews...');
+        
+        $.ajax({
+            url: `http://localhost:4000/api/v1/reviews/${productId}`,
+            method: 'GET',
+            success: (data) => {
+                const reviews = data.reviews || [];
+                displayReviews(productId, reviews);
+                reviewsContainer.slideDown();
+                button.prop('disabled', false).text('Hide Reviews');
+            },
+            error: () => {
+                alert('Failed to load reviews');
+                button.prop('disabled', false).text('Check Reviews');
+            }
+        });
+    }
+
+    // NEW FUNCTION: Display Reviews
+    function displayReviews(productId, reviews) {
+        const reviewsContainer = $(`#reviews-${productId}`);
+        
+        if (reviews.length === 0) {
+            reviewsContainer.html(`
+                <h4 style="color: #880e4f; margin-bottom: 15px;">Customer Reviews</h4>
+                <p style="color: #666; text-align: center; padding: 20px;">No reviews yet for this product.</p>
+            `);
+            return;
+        }
+        
+        // Calculate average rating
+        const totalRating = reviews.reduce((sum, review) => sum + parseInt(review.rating), 0);
+        const averageRating = (totalRating / reviews.length).toFixed(1);
+        
+        let reviewsHtml = `
+            <h4 style="color: #880e4f; margin-bottom: 10px;">Customer Reviews</h4>
+            <div style="margin-bottom: 15px; padding: 10px; background: rgba(236, 64, 122, 0.1); border-radius: 8px;">
+                <span style="color: #880e4f; font-weight: 600;">Average Rating: ${averageRating}/5</span>
+                <span style="color: #ffc107; margin-left: 10px;">${generateStars(averageRating)}</span>
+                <span style="color: #666; margin-left: 10px;">(${reviews.length} review${reviews.length > 1 ? 's' : ''})</span>
+            </div>
+            <div class="reviews-list">
+        `;
+        
+        reviews.forEach(review => {
+            const reviewDate = new Date(review.created_at).toLocaleDateString();
+            reviewsHtml += `
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="review-stars">${generateStars(review.rating)}</div>
+                        <div class="review-rating">${review.rating}/5</div>
+                    </div>
+                    <div class="review-comment">"${review.comment}"</div>
+                    <div class="review-meta">
+                        <span class="review-author">By: ${review.user_name}</span>
+                        <span class="review-date">${reviewDate}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        reviewsHtml += '</div>';
+        reviewsContainer.html(reviewsHtml);
+    }
+
+    // NEW FUNCTION: Generate Star Rating Display
+    function generateStars(rating) {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        
+        let stars = '';
+        
+        // Add full stars
+        for (let i = 0; i < fullStars; i++) {
+            stars += '★';
+        }
+        
+        // Add half star if needed
+        if (hasHalfStar) {
+            stars += '☆';
+        }
+        
+        // Add empty stars
+        for (let i = 0; i < emptyStars; i++) {
+            stars += '☆';
+        }
+        
+        return stars;
     }
 
     function loadCartCount() {
