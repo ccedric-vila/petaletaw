@@ -6,8 +6,8 @@
 
 
 # misc
-/config
-
+/config/.env
+/.env
 /images
 
 
