@@ -36,7 +36,7 @@ CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     category ENUM('Solo', 'By Three', 'Bouquet') NOT NULL,
-    usage_type ENUM('cut', 'potted', 'wedding', 'funeral', 'decorative') NOT NULL,
+    usage_type ENUM('Cut', 'Potted', 'Wedding', 'Funeral', 'Decorative') NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL, -- ✅ Only price
     color VARCHAR(50),
@@ -48,18 +48,6 @@ CREATE TABLE products (
     FOREIGN KEY (supplier_id) REFERENCES supplier(id)
 );
 
--- Reviews Table
-CREATE TABLE reviews (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    product_id INT,
-    rating INT CHECK (rating BETWEEN 1 AND 5),
-    comment TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (product_id) REFERENCES products(id)
-);
 
 -- Cart Items Table
 CREATE TABLE cart_items (
@@ -91,9 +79,21 @@ CREATE TABLE order_items (
     order_id INT,
     product_id INT,
     quantity INT,
-    price DECIMAL(10,2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    order_item_id INT,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (order_item_id) REFERENCES order_items(id),
+    UNIQUE (user_id, order_item_id)
 );
