@@ -7,15 +7,18 @@ const path = require('path');
 // Get all orders with total amount and user details
 exports.getAllOrders = (req, res) => {
     const sql = `
-        SELECT o.*, 
-            u.name as customer_name,
-            u.email as customer_email,
-            u.address as customer_address,
-            (SELECT SUM(oi.quantity * oi.price) FROM order_items oi WHERE oi.order_id = o.id) AS total_amount
-        FROM orders o
-        JOIN users u ON o.user_id = u.id
-        ORDER BY o.created_at DESC
-    `;
+    SELECT o.*, 
+        u.name as customer_name,
+        u.email as customer_email,
+        u.address as customer_address,
+        (SELECT SUM(oi.quantity * p.price) 
+         FROM order_items oi 
+         JOIN products p ON oi.product_id = p.id 
+         WHERE oi.order_id = o.id) AS total_amount
+    FROM orders o
+    JOIN users u ON o.user_id = u.id
+    ORDER BY o.created_at DESC
+`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.error('Failed to get orders:', err);
@@ -101,10 +104,11 @@ exports.updateOrderStatus = (req, res) => {
 
                 // get order items & total amount
                 db.query(
-                    `SELECT p.name, oi.quantity, oi.price 
-                     FROM order_items oi 
-                     JOIN products p ON oi.product_id = p.id 
-                     WHERE oi.order_id = ?`,
+    `SELECT p.name, oi.quantity, p.price 
+     FROM order_items oi 
+     JOIN products p ON oi.product_id = p.id 
+     WHERE oi.order_id = ?`,
+    [orderId],
                     [orderId],
                     async (err3, items) => {
                         if (err3) {

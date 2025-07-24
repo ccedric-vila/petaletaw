@@ -37,7 +37,7 @@ $(document).ready(function () {
                             <td>${index + 1}</td>
                             <td>${item.name}</td>
                             <td>${imageHtml}</td>
-                            <td>$${item.price}</td>
+                            <td>₱${item.price}</td>
                             <td>${item.quantity}</td>
                             <td>
                                 <button class="incrementBtn" data-id="${item.cart_item_id}">+</button>
@@ -49,7 +49,7 @@ $(document).ready(function () {
                 });
 
                 $('#cartTable tbody').html(rows);
-                $('#cartTotal').text(`$${total.toFixed(2)}`);
+                $('#cartTotal').text(`₱${total.toFixed(2)}`);
             },
             error: function (err) {
                 console.error('Failed to load cart:', err);

@@ -17,6 +17,10 @@
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   
+  <!-- jQuery Validation Plugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/additional-methods.min.js"></script>
+  
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
@@ -123,11 +127,44 @@
     }
 
     #productForm input,
-    #productForm select {
+    #productForm select,
+    #productForm textarea {
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 10px;
       font-size: 14px;
+      width: 100%;
+    }
+
+    /* jQuery Validation Styling */
+    .error-input {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+      display: block;
+    }
+
+    .valid-input {
+      border-color: #28a745 !important;
+      box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+
+    /* Current images styling */
+    .current-images-container {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      margin-top: 5px;
+    }
+
+    .current-image-item {
+      text-align: center;
     }
 
     #submitBtn {
@@ -143,6 +180,11 @@
 
     #submitBtn:hover {
       background-color: #d81b60;
+    }
+
+    #submitBtn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
     }
 
     /* Close button in form */
@@ -297,6 +339,14 @@
       background-color: #d81b60;
       border-color: #d81b60;
     }
+
+    /* Form field labels */
+    .field-label {
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 5px;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -325,8 +375,11 @@
     <form id="productForm" enctype="multipart/form-data">
       <button type="button" class="close-form-btn" id="closeFormBtn">×</button>
       <input type="hidden" id="productId">
-      <input type="text" id="name" name="name" placeholder="Product Name" required>
+      
+      <label class="field-label">Product Name *</label>
+      <input type="text" id="name" name="name" placeholder="Enter product name" required>
 
+      <label class="field-label">Category *</label>
       <select id="category" name="category" required>
         <option value="">-- Select Category --</option>
         <option value="Solo">Solo</option>
@@ -334,8 +387,9 @@
         <option value="Bouquet">Bouquet</option>
       </select>
 
+      <label class="field-label">Usage Type *</label>
       <select id="usage_type" name="usage_type" required>
-        <option value="">-- Usage Type --</option>
+        <option value="">-- Select Usage Type --</option>
         <option value="cut">Cut</option>
         <option value="potted">Potted</option>
         <option value="wedding">Wedding</option>
@@ -343,14 +397,25 @@
         <option value="decorative">Decorative</option>
       </select>
 
-      <input type="text" id="description" name="description" placeholder="Description">
-      <input type="number" step="1" id="price" name="price" placeholder="Price" required>
-      <input type="text" id="color" name="color" placeholder="Color">
-      <input type="number" id="stock" name="stock" placeholder="Stock">
+      <label class="field-label">Description</label>
+      <textarea id="description" name="description" placeholder="Enter product description" rows="3"></textarea>
+      
+      <label class="field-label">Price *</label>
+      <input type="number" step="0.01" id="price" name="price" placeholder="0.00" required>
+      
+      <label class="field-label">Color</label>
+      <input type="text" id="color" name="color" placeholder="Enter color">
+      
+      <label class="field-label">Stock Quantity *</label>
+      <input type="number" id="stock" name="stock" placeholder="0" required>
+      
+      <label class="field-label">Product Images</label>
       <input type="file" id="images" name="images" accept="image/*" multiple>
+      <small style="color: #666;">You can select multiple images. Supported formats: JPG, PNG, GIF</small>
 
+      <label class="field-label">Supplier</label>
       <select id="supplier_id" name="supplier_id">
-        <option value="">-- Supplier (Optional) --</option>
+        <option value="">-- Select Supplier (Optional) --</option>
       </select>
 
       <button type="submit" id="submitBtn">Add Product</button>
@@ -401,6 +466,11 @@
         $("#productForm")[0].reset();
         $("#productId").val('');
         $("#submitBtn").text('Add Product');
+        // Clear validation errors
+        $("#productForm").validate().resetForm();
+        $('.error-input').removeClass('error-input');
+        $('.error-message').remove();
+        $('#currentImages').remove();
       });
 
       $("#closeFormBtn").click(function() {
@@ -408,7 +478,7 @@
         $("#showFormBtn").show();
       });
 
-      // FIXED: Click outside to hide form - now includes .editBtn in exception list
+      // Click outside to hide form - includes .editBtn in exception list
       $(document).click(function(event) {
         if (!$(event.target).closest('#formContainer, #showFormBtn, .editBtn').length) {
           if ($("#formContainer").is(':visible')) {

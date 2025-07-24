@@ -1,528 +1,355 @@
 $(document).ready(function () {
     const token = sessionStorage.getItem('token');
     const userId = sessionStorage.getItem('userId');
+    const productApi = 'http://localhost:4000/api/v1/product';
+    const supplierApi = 'http://localhost:4000/api/v1/supplier';
 
-    if (!token || !userId) return window.location.href = "/frontend/Userhandling/login.html";
+    if (!token || !userId) {
+        sessionStorage.clear();
+        window.location.href = "/frontend/Userhandling/login.html";
+        return;
+    }
 
-    let allProducts = []; // Store all products for filtering
-    let filteredProducts = []; // Store filtered products for infinite scroll
-    let displayedProducts = []; // Products currently displayed
-    let currentUser = null; // Store current user data
-    let currentPage = 0; // Current page for infinite scroll
-    const itemsPerPage = 20; // Items per page
-    let isLoading = false; // Prevent multiple simultaneous loads
-
-    // Verify customer and load initial data
+    // Auth check + data load
     $.ajax({
+        method: "GET",
         url: `http://localhost:4000/api/v1/profile/${userId}`,
-        method: 'GET',
         headers: { 'Authorization': `Bearer ${token}` },
-        success: res => {
-            if (!res.user || res.user.role !== 'customer') {
+        success: function (res) {
+            if (res.user.role !== 'admin') {
                 sessionStorage.clear();
-                return window.location.href = "/frontend/Userhandling/login.html";
+                window.location.href = "/frontend/Userhandling/home.html";
+                return;
             }
-            currentUser = res.user;
-            // Update customer name in the UI
-            updateCustomerName(currentUser.name);
             loadProducts();
-            loadCartCount(); // Load initial cart count
+            loadSuppliers();
         },
-        error: () => {
+        error: function () {
             sessionStorage.clear();
             window.location.href = "/frontend/Userhandling/login.html";
         }
     });
 
+    // jQuery Validation Setup
+    $.validator.addMethod("currency", function(value, element) {
+        return this.optional(element) || /^\d+(\.\d{1,2})?$/.test(value);
+    }, "Please enter a valid price (e.g., 10.50)");
+
+    $.validator.addMethod("positiveInteger", function(value, element) {
+        return this.optional(element) || (Number.isInteger(Number(value)) && Number(value) >= 0);
+    }, "Please enter a valid non-negative number");
+
+    // Initialize form validation
+    $("#productForm").validate({
+        rules: {
+            name: {
+                required: true,
+                minlength: 2,
+                maxlength: 100
+            },
+            category: {
+                required: true
+            },
+            usage_type: {
+                required: true
+            },
+            description: {
+                maxlength: 500
+            },
+            price: {
+                required: true,
+                currency: true,
+                min: 0.01
+            },
+            color: {
+                maxlength: 50
+            },
+            stock: {
+                required: true,
+                positiveInteger: true,
+                min: 0
+            }
+        },
+        messages: {
+            name: {
+                required: "Product name is required",
+                minlength: "Product name must be at least 2 characters",
+                maxlength: "Product name cannot exceed 100 characters"
+            },
+            category: {
+                required: "Please select a category"
+            },
+            usage_type: {
+                required: "Please select a usage type"
+            },
+            description: {
+                maxlength: "Description cannot exceed 500 characters"
+            },
+            price: {
+                required: "Price is required",
+                min: "Price must be greater than 0"
+            },
+            color: {
+                maxlength: "Color cannot exceed 50 characters"
+            },
+            stock: {
+                required: "Stock quantity is required",
+                min: "Stock cannot be negative"
+            }
+        },
+        errorElement: 'div',
+        errorClass: 'error-message',
+        errorPlacement: function(error, element) {
+            error.insertAfter(element);
+        },
+        highlight: function(element) {
+            $(element).addClass('error-input');
+        },
+        unhighlight: function(element) {
+            $(element).removeClass('error-input');
+        }
+    });
+
+    function loadSuppliers(selectedSupplierId = null) {
+        $.ajax({
+            url: supplierApi,
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` },
+            success: function (data) {
+                let options = '<option value="">-- Supplier (Optional) --</option>';
+                data.forEach(supplier => {
+                    const selected = supplier.id == selectedSupplierId ? 'selected' : '';
+                    options += `<option value="${supplier.id}" ${selected}>${supplier.supplier_name}</option>`;
+                });
+                $('#supplier_id').html(options);
+            },
+            error: function () {
+                alert('Failed to load suppliers');
+            }
+        });
+    }
+
     function loadProducts() {
         $.ajax({
-            url: 'http://localhost:4000/api/v1/home',
+            url: productApi,
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` },
-            success: data => {
-                allProducts = data.products || [];
-                applyFilters(); // Apply filters after loading products
+            success: function (data) {
+                let rows = '';
+                data.forEach((product, index) => {
+                    let imageDisplay = '';
+                    if (product.image) {
+                        const imageArray = product.image.split(',');
+                        const firstImage = imageArray[0];
+                        imageDisplay = `
+                          <div class="image-slider" data-index="0" data-images='${JSON.stringify(imageArray)}'>
+                            <button class="slider-btn prev-btn">&lt;</button>
+                            <img src="/frontend/images/${firstImage}" class="slider-img">
+                            <button class="slider-btn next-btn">&gt;</button>
+                          </div>`;
+                    }
+
+                    rows += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${product.name}</td>
+                            <td>${product.category}</td>
+                            <td>${product.usage_type}</td>
+                            <td>₱${product.price}</td>
+                            <td>${product.stock}</td>
+                            <td>${imageDisplay}</td>
+                            <td>${product.supplier_name || ''}</td>
+                            <td>
+                                <button class="editBtn" data-id="${product.id}">Edit</button>
+                                <button class="deleteBtn" data-id="${product.id}">Delete</button>
+                            </td>
+                        </tr>`;
+                });
+                $('#productTable tbody').html(rows);
             },
-            error: () => {
+            error: function (err) {
+                console.error('Error loading products:', err);
                 alert('Failed to load products');
-                console.error('Failed to load products');
             }
         });
     }
 
-    function applyFilters() {
-        let products = [...allProducts];
-
-        // Get current filter values
-        const search = $('#searchInput').val().toLowerCase().trim();
-        const category = $('#categoryFilter').val();
-        const usage = $('#usageTypeFilter').val();
-        const color = $('#colorFilter').val();
-        const priceSort = $('#priceSort').val();
-        const stockSort = $('#stockSort').val();
-
-        // Apply text search filter
-        if (search) {
-            products = products.filter(product => 
-                product.name.toLowerCase().includes(search) ||
-                product.category.toLowerCase().includes(search) ||
-                product.usage_type.toLowerCase().includes(search) ||
-                (product.color && product.color.toLowerCase().includes(search))
-            );
-        }
-
-        // Apply category filter
-        if (category) {
-            products = products.filter(product => 
-                product.category === category
-            );
-        }
-
-        // Apply usage type filter
-        if (usage) {
-            products = products.filter(product => 
-                product.usage_type === usage
-            );
-        }
-
-        // Apply color filter
-        if (color) {
-            products = products.filter(product => 
-                product.color && product.color.toLowerCase().includes(color.toLowerCase())
-            );
-        }
-
-        // Apply price sorting
-        if (priceSort) {
-            products.sort((a, b) => {
-                const priceA = parseFloat(a.price) || 0;
-                const priceB = parseFloat(b.price) || 0;
-                return priceSort === 'asc' ? priceA - priceB : priceB - priceA;
-            });
-        }
-
-        // Apply stock sorting
-        if (stockSort) {
-            products.sort((a, b) => {
-                const stockA = parseInt(a.stock) || 0;
-                const stockB = parseInt(b.stock) || 0;
-                return stockSort === 'high' ? stockB - stockA : stockA - stockB;
-            });
-        }
-
-        // Reset infinite scroll variables
-        filteredProducts = products;
-        displayedProducts = [];
-        currentPage = 0;
-        
-        // Clear existing products and load first batch
-        $('#productContainer').empty();
-        loadNextBatch();
-    }
-
-    function loadNextBatch() {
-        if (isLoading) return;
-        
-        isLoading = true;
-        showLoadingIndicator();
-
-        const startIndex = currentPage * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const nextBatch = filteredProducts.slice(startIndex, endIndex);
-
-        if (nextBatch.length === 0) {
-            hideLoadingIndicator();
-            isLoading = false;
-            return;
-        }
-
-        // Simulate network delay for better UX (remove in production if not needed)
-        setTimeout(() => {
-            displayedProducts.push(...nextBatch);
-            renderNewProducts(nextBatch);
-            currentPage++;
-            isLoading = false;
-            hideLoadingIndicator();
-        }, 300);
-    }
-
-    function renderNewProducts(products) {
-        let cards = '';
-        
-        products.forEach(product => {
-            const imgTag = product.image
-                ? `<img src="/frontend/images/${product.image.split(',')[0]}" alt="${product.name}" onerror="this.style.display='none'">`
-                : '<div style="height: 160px; background: #f8bbd0; display: flex; align-items: center; justify-content: center; border-radius: 15px; color: #880e4f;">No Image</div>';
-
-            const stock = parseInt(product.stock) || 0;
-            const isOutOfStock = stock === 0;
-            const color = product.color || 'Not specified';
-
-            cards += `
-                <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${product.id}">
-                    ${imgTag}
-                    <h4>${product.name}</h4>
-                    <p style="color: #666; font-style: italic; margin: 5px 0;">${color}</p>
-                    <p><strong>Category:</strong> ${product.category}</p>
-                    <p><strong>Usage:</strong> ${product.usage_type}</p>
-                    <p><strong>Price:</strong> ₱${parseFloat(product.price).toFixed(2)}</p>
-                    <p><strong>Stock:</strong> ${stock} ${stock === 1 ? 'item' : 'items'}</p>
-                    ${isOutOfStock ? 
-                        '<p style="color: #ff4444; font-weight: bold;">Out of Stock</p>' : 
-                        `<button class="addToCartBtn" data-id="${product.id}">Add to Cart</button>
-                         <button class="checkoutBtn" data-id="${product.id}">Checkout</button>`
-                    }
-                    <button class="checkReviewsBtn" data-id="${product.id}">Check Reviews</button>
-                    <div class="reviews-container" id="reviews-${product.id}" style="display: none;"></div>
-                </div>`;
-        });
-
-        // Show "no products found" message if this is the first load and no products
-        if (displayedProducts.length === 0 && products.length === 0) {
-            cards = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #880e4f;">
-                    <h3>🌸 No products found</h3>
-                    <p>Try adjusting your filters or search terms.</p>
-                </div>
-            `;
-        }
-
-        $('#productContainer').append(cards);
-        
-        // Reattach event listeners for new products
-        $('.addToCartBtn').off('click').on('click', addToCart);
-        $('.checkoutBtn').off('click').on('click', checkoutSolo);
-        $('.checkReviewsBtn').off('click').on('click', toggleReviews); // NEW: Add reviews button listener
-    }
-
-    // NEW: Function to toggle reviews visibility
-    function toggleReviews() {
-        const productId = $(this).data('id');
-        const reviewsContainer = $(`#reviews-${productId}`);
-        const button = $(this);
-        
-        if (reviewsContainer.is(':visible')) {
-            // Hide reviews
-            reviewsContainer.slideUp();
-            button.text('Check Reviews');
-        } else {
-            // Show reviews - load if not already loaded
-            if (reviewsContainer.html().trim() === '') {
-                loadProductReviews(productId);
-            } else {
-                reviewsContainer.slideDown();
-                button.text('Hide Reviews');
-            }
-        }
-    }
-
-    // NEW: Function to load reviews for a specific product
-    function loadProductReviews(productId) {
-        const reviewsContainer = $(`#reviews-${productId}`);
-        const button = $(`.checkReviewsBtn[data-id="${productId}"]`);
-        
-        // Show loading state
-        button.prop('disabled', true).text('Loading...');
-        reviewsContainer.html('<div style="text-align: center; padding: 20px; color: #880e4f;">Loading reviews...</div>');
-        reviewsContainer.slideDown();
-        
-        $.ajax({
-            url: `http://localhost:4000/api/v1/home/reviews/${productId}`,
-            method: 'GET',
-            success: data => {
-                displayReviews(productId, data);
-                button.prop('disabled', false).text('Hide Reviews');
-            },
-            error: () => {
-                reviewsContainer.html('<div style="text-align: center; padding: 20px; color: #ff4444;">Failed to load reviews</div>');
-                button.prop('disabled', false).text('Check Reviews');
-            }
-        });
-    }
-
-    // NEW: Function to display reviews
-    function displayReviews(productId, data) {
-        const reviewsContainer = $(`#reviews-${productId}`);
-        const { reviews, averageRating, totalReviews } = data;
-        
-        if (reviews.length === 0) {
-            reviewsContainer.html(`
-                <div class="reviews-section">
-                    <div class="reviews-header">
-                        <h5>📝 Customer Reviews</h5>
-                        <p style="color: #666; font-style: italic;">No reviews yet for this product.</p>
-                    </div>
-                </div>
-            `);
-            return;
-        }
-        
-        // Generate star rating HTML
-        function generateStars(rating) {
-            let stars = '';
-            const fullStars = Math.floor(rating);
-            const hasHalfStar = rating % 1 !== 0;
-            
-            for (let i = 0; i < fullStars; i++) {
-                stars += '⭐';
-            }
-            if (hasHalfStar) {
-                stars += '✨';
-            }
-            for (let i = fullStars + (hasHalfStar ? 1 : 0); i < 5; i++) {
-                stars += '☆';
-            }
-            return stars;
-        }
-        
-        let reviewsHtml = `
-            <div class="reviews-section">
-                <div class="reviews-header">
-                    <h5>📝 Customer Reviews</h5>
-                    <div class="rating-summary">
-                        <span class="average-rating">${generateStars(averageRating)} ${averageRating}/5</span>
-                        <span class="total-reviews">(${totalReviews} review${totalReviews !== 1 ? 's' : ''})</span>
-                    </div>
-                </div>
-                <div class="reviews-list">
-        `;
-        
-        reviews.forEach(review => {
-            const reviewDate = new Date(review.created_at).toLocaleDateString();
-            reviewsHtml += `
-                <div class="review-item">
-                    <div class="review-header">
-                        <strong>${review.reviewer_name}</strong>
-                        <span class="review-rating">${generateStars(review.rating)}</span>
-                        <span class="review-date">${reviewDate}</span>
-                    </div>
-                    ${review.comment ? `<div class="review-comment">${review.comment}</div>` : ''}
-                </div>
-            `;
-        });
-        
-        reviewsHtml += `
-                </div>
-            </div>
-        `;
-        
-        reviewsContainer.html(reviewsHtml);
-    }
-
-    function showLoadingIndicator() {
-        // Remove existing loading indicator
-        $('#loadingIndicator').remove();
-        
-        // Add loading indicator
-        const loadingHtml = `
-            <div id="loadingIndicator" style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #880e4f;">
-                <div style="display: inline-block; animation: spin 1s linear infinite; border: 3px solid #f3f3f3; border-top: 3px solid #880e4f; border-radius: 50%; width: 30px; height: 30px;"></div>
-                <p style="margin-top: 10px;">Loading more products...</p>
-            </div>
-        `;
-        $('#productContainer').append(loadingHtml);
-        
-        // Add CSS animation if not exists
-        if (!$('#spinAnimation').length) {
-            $('head').append(`
-                <style id="spinAnimation">
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                </style>
-            `);
-        }
-    }
-
-    function hideLoadingIndicator() {
-        $('#loadingIndicator').remove();
-    }
-
-    // Infinite scroll implementation
-    function initInfiniteScroll() {
-        $(window).on('scroll', function() {
-            // Check if user scrolled near bottom of page
-            const scrollTop = $(window).scrollTop();
-            const windowHeight = $(window).height();
-            const documentHeight = $(document).height();
-            
-            // Trigger load when user is 200px from bottom
-            if (scrollTop + windowHeight >= documentHeight - 200) {
-                // Check if there are more products to load
-                if (displayedProducts.length < filteredProducts.length && !isLoading) {
-                    loadNextBatch();
-                }
-            }
-        });
-    }
-
-    // Initialize infinite scroll
-    initInfiniteScroll();
-
-    function addToCart() {
-        const productId = $(this).data('id');
-        const button = $(this);
-        
-        // Disable button during request
-        button.prop('disabled', true).text('Adding...');
-        
-        $.ajax({
-            url: 'http://localhost:4000/api/v1/cart',
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            contentType: 'application/json',
-            data: JSON.stringify({ productId, quantity: 1 }),
-            success: () => {
-                alert('Added to cart!');
-                loadCartCount(); // Update cart count
-                button.prop('disabled', false).text('Add to Cart');
-            },
-            error: (xhr) => {
-                const errorMsg = xhr.responseJSON?.message || 'Failed to add to cart';
-                alert(errorMsg);
-                button.prop('disabled', false).text('Add to Cart');
-            }
-        });
-    }
-
-    function checkoutSolo() {
-        const productId = $(this).data('id');
-        const button = $(this);
-        
-        // Disable button during request
-        button.prop('disabled', true).text('Processing...');
-        
-        $.ajax({
-            url: 'http://localhost:4000/api/v1/checkout/prepare-solo',
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            contentType: 'application/json',
-            data: JSON.stringify({ productId }),
-            success: res => {
-                // Store checkout data for checkout.html page
-                sessionStorage.setItem('checkoutData', JSON.stringify(res.checkout));
-                window.location.href = "/frontend/Userhandling/checkout.html";
-            },
-            error: err => {
-                const errorMsg = err.responseJSON?.message || 'Checkout failed';
-                alert(errorMsg);
-                button.prop('disabled', false).text('Checkout');
-            }
-        });
-    }
-
-    function loadCartCount() {
-        $.ajax({
-            url: 'http://localhost:4000/api/v1/cart/count',
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` },
-            success: (data) => {
-                updateCartCount(data.count || 0);
-            },
-            error: () => {
-                updateCartCount(0);
-            }
-        });
-    }
-
-    // Auto-apply filters when any filter input changes
-    $('#searchInput').on('input', function() {
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => {
-            applyFilters();
-        }, 300); // Debounce search for 300ms
-    });
-
-    $('#categoryFilter, #usageTypeFilter, #colorFilter, #priceSort, #stockSort').on('change', function() {
-        applyFilters();
-    });
-
-    // Clear all filters
-    function clearFilters() {
-        $('#searchInput').val('');
-        $('#categoryFilter').val('');
-        $('#usageTypeFilter').val('');
-        $('#colorFilter').val('');
-        $('#priceSort').val('');
-        $('#stockSort').val('');
-        applyFilters();
-    }
-
-    // Add clear filters button functionality
-    $('#clearFiltersBtn').on('click', clearFilters);
-
-    // Navigation event handlers for dropdown menu
-    $("#logoutBtn").click(() => {
-        sessionStorage.clear();
-        window.location.href = "/frontend/Userhandling/login.html";
-    });
-
-    $("#viewCartBtn").click(() => {
-        window.location.href = "/frontend/Userhandling/cart.html";
-    });
-
-    $("#editProfileBtn").click(() => {
-        window.location.href = "/frontend/Userhandling/profile.html";
-    });
-
-    // New Order History button handler
-    $("#orderHistoryBtn").click(() => {
-        window.location.href = "/frontend/Userhandling/review.html";
-    });
-
-    // Dropdown toggle functionality
-    $("#userDropdownToggle").click(function(e) {
+    $('#productForm').submit(function (e) {
         e.preventDefault();
-        e.stopPropagation();
-        $("#userDropdownMenu").toggle();
-    });
-
-    // Close dropdown when clicking outside
-    $(document).click(function(e) {
-        if (!$(e.target).closest('#userDropdownToggle, #userDropdownMenu').length) {
-            $("#userDropdownMenu").hide();
+        
+        // Check if form is valid before submitting
+        if (!$(this).valid()) {
+            return false;
         }
-    });
 
-    // Prevent dropdown from closing when clicking inside it
-    $("#userDropdownMenu").click(function(e) {
-        e.stopPropagation();
-    });
+        const formData = new FormData(this);
+        const productId = $('#productId').val();
+        const isEdit = !!productId;
 
-    // Remove periodic refresh to prevent interference with infinite scroll
-    // Refresh products periodically only if user is idle
-    let idleTimer;
-    function resetIdleTimer() {
-        clearTimeout(idleTimer);
-        idleTimer = setTimeout(() => {
-            if (document.visibilityState === 'visible') {
+        $.ajax({
+            url: isEdit ? `${productApi}/${productId}` : productApi,
+            method: isEdit ? 'PUT' : 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: { 'Authorization': `Bearer ${token}` },
+            success: function () {
+                alert(isEdit ? 'Product updated successfully!' : 'Product added successfully!');
+                $('#productForm')[0].reset();
+                $('#productId').val('');
+                $('#submitBtn').text('Add Product');
+                // Clear existing images display
+                $('#currentImages').remove();
+                // Hide form and show add button after successful submission
+                $('#formContainer').hide();
+                $('#showFormBtn').show();
                 loadProducts();
+                loadSuppliers();
+            },
+            error: function (err) {
+                console.error('Error:', err);
+                let errorMsg = 'Operation failed. Please try again.';
+                if (err.responseJSON && err.responseJSON.error) {
+                    errorMsg = err.responseJSON.error;
+                    if (err.responseJSON.details) {
+                        errorMsg += ` (${err.responseJSON.details})`;
+                    }
+                }
+                alert(errorMsg);
             }
-        }, 60000); // Refresh after 1 minute of inactivity
+        });
+    });
+
+    $(document).on('click', '.editBtn', function () {
+        const productId = $(this).data('id');
+        
+        console.log('Edit button clicked for product ID:', productId);
+        
+        // First, load the product data
+        $.ajax({
+            url: `${productApi}/${productId}`,
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` },
+            success: function (product) {
+                console.log('Product data loaded:', product);
+                
+                // SHOW FORM AFTER data is loaded
+                $("#formContainer").show();
+                $("#showFormBtn").hide();
+                
+                // Reset form first
+                $("#productForm")[0].reset();
+                
+                // Clear any existing validation errors
+                $("#productForm").validate().resetForm();
+                $('.error-input').removeClass('error-input');
+                $('.error-message').remove();
+                
+                // Populate form fields
+                $('#productId').val(product.id);
+                $('#name').val(product.name);
+                $('#category').val(product.category);
+                $('#description').val(product.description);
+                $('#price').val(product.price);
+                $('#color').val(product.color);
+                $('#stock').val(product.stock);
+                
+                // Debug and set usage_type
+                console.log('Product usage_type from API:', product.usage_type);
+                console.log('Available usage_type options:', $('#usage_type option').map(function() { return this.value; }).get());
+                
+                // Try to set usage_type with different approaches
+                if (product.usage_type) {
+                    $('#usage_type').val(product.usage_type);
+                    
+                    // If that didn't work, try finding by text content
+                    if ($('#usage_type').val() !== product.usage_type) {
+                        $('#usage_type option').each(function() {
+                            if ($(this).text().toLowerCase() === product.usage_type.toLowerCase() || 
+                                $(this).val().toLowerCase() === product.usage_type.toLowerCase()) {
+                                $(this).prop('selected', true);
+                                return false;
+                            }
+                        });
+                    }
+                }
+                
+                console.log('Final usage_type value set:', $('#usage_type').val());
+                
+                // Change button text
+                $('#submitBtn').text('Update Product');
+                
+                // Load suppliers with the selected one
+                loadSuppliers(product.supplier_id);
+                
+                // Display existing images
+                displayExistingImages(product.images || []);
+                
+                // Scroll to form
+                $('html, body').animate({ scrollTop: $('#productForm').offset().top }, 500);
+            },
+            error: function (err) {
+                console.error('Error loading product:', err);
+                alert('Failed to load product details');
+            }
+        });
+    });
+
+    // Function to display existing images in edit mode
+    function displayExistingImages(images) {
+        // Remove any existing image display
+        $('#currentImages').remove();
+        
+        if (images && images.length > 0) {
+            let imageHTML = '<div id="currentImages" style="margin-top: 10px;"><label>Current Images:</label><div class="current-images-container">';
+            
+            images.forEach((image, index) => {
+                imageHTML += `
+                    <div class="current-image-item" style="display: inline-block; margin: 5px; position: relative;">
+                        <img src="/frontend/images/${image}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; border: 1px solid #ccc;">
+                        <div style="font-size: 10px; text-align: center; margin-top: 2px;">${image}</div>
+                    </div>
+                `;
+            });
+            
+            imageHTML += '</div><small style="color: #666;">Upload new images to replace these</small></div>';
+            
+            // Insert after the file input
+            $('#images').after(imageHTML);
+        }
     }
 
-    // Reset idle timer on user activity
-    $(document).on('mousemove scroll keypress', resetIdleTimer);
-    resetIdleTimer();
+    $(document).on('click', '.deleteBtn', function () {
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        const productId = $(this).data('id');
+        $.ajax({
+            url: `${productApi}/${productId}`,
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` },
+            success: function () {
+                alert('Product deleted successfully');
+                loadProducts();
+            },
+            error: function (err) {
+                console.error('Error deleting product:', err);
+                alert('Failed to delete product');
+            }
+        });
+    });
+
+    // Image slider navigation
+    $(document).on('click', '.next-btn, .prev-btn', function () {
+        const $slider = $(this).closest('.image-slider');
+        const images = JSON.parse($slider.attr('data-images'));
+        let index = parseInt($slider.attr('data-index'));
+
+        if ($(this).hasClass('next-btn')) {
+            index = (index + 1) % images.length;
+        } else {
+            index = (index - 1 + images.length) % images.length;
+        }
+
+        $slider.find('img').attr('src', `/frontend/images/${images[index]}`);
+        $slider.attr('data-index', index);
+    });
 });
-
-// Global functions that can be called from HTML
-function updateCustomerName(customerName) {
-    if (customerName) {
-        $("#welcomeText").text(`Welcome, ${customerName}!`);
-        // Also update the user avatar with first letter
-        const firstLetter = customerName.charAt(0).toUpperCase();
-        $(".user-avatar").text(firstLetter);
-    }
-}
-
-function updateCartCount(count) {
-    $("#cartCount").text(count || 0);
-    // Optional: Hide cart count if zero
-    if (count > 0) {
-        $("#cartCount").show();
-    } else {
-        $("#cartCount").hide();
-    }
-}

@@ -42,9 +42,9 @@ $(document).ready(function() {
             <div class="order-card">
                 <div class="order-header">
                     <div>
-                        <h3>Order #${order.order_id}</h3>
-                        <p class="mb-1">Date: ${new Date(order.order_date).toLocaleDateString()}</p>
-                        <p class="mb-1">Total: $${parseFloat(order.total_amount).toFixed(2)}</p>
+                        <h3>Order</h3>
+                        <p class="mb-1">Order Date: ${new Date(order.order_date).toLocaleDateString()}</p>
+                        <p class="mb-1">Total: ₱${parseFloat(order.total_amount).toFixed(2)}</p>
                     </div>
                     <div>
                         <span class="badge bg-${getStatusColor(order.status)}">${order.status}</span>
@@ -59,7 +59,7 @@ $(document).ready(function() {
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <strong>${item.product_name}</strong><br>
-                                        <small>Qty: ${item.quantity} × $${parseFloat(item.price).toFixed(2)}</small>
+                                        <small>Qty: ${item.quantity} × ₱${parseFloat(item.price).toFixed(2)}</small>
                                     </div>
                                 </div>
                             </div>
@@ -208,10 +208,9 @@ $(document).ready(function() {
         });
     });
 
-    // Logout handler
-    $('#logoutBtn').on('click', function() {
-        sessionStorage.removeItem('token');
-        window.location.href = '/frontend/Userhandling/login.html';
+    // Back to Home handler
+    $('#backToHomeBtn').on('click', function() {
+        window.location.href = "/frontend/Userhandling/home.html";
     });
 
     // Initial load
